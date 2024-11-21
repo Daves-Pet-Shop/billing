@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: Billing Service API
+  description: API for managing billing details and transactions for Dave's Pet Shop.
+  version: 1.0.0
+servers:
+  - url: https://api.davespetshop.com/v1
+    description: Production server
+  - url: https://staging.api.davespetshop.com/v1
+    description: Staging server
+
+paths:
+  /billing/invoices:
+    get:
+      summary: Retrieve all invoices for a customer
+      tags:
+        - Billing
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+          schema:
+            type: string
+            description: The unique identifier of the customer
+      responses:
+        '200':
+          description: A list of invoices for the customer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+        '400':
+          description: Invalid request parameters
+        '404':
+          description: Customer not found
+
+  /billing/invoices/{invoiceId}:
+    get:
+      summary: Retrieve details of a specific invoice
+      tags:
+        - Billing
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: string
+            description: The unique identifier of the invoice
+      responses:
+        '200':
+          description: The details of the specified invoice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '404':
+          description: Invoice not found
+
+  /billing/payments:
+    post:
+      summary: Record a payment for an invoice
+      tags:
+        - Payments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Payment recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Invalid payment details
+        '404':
+          description: Invoice not found
+
+  /billing/payment-methods:
+    get:
+      summary: Retrieve payment methods for a customer
+      tags:
+        - Payments
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+          schema:
+            type: string
+            description: The unique identifier of the customer
+      responses:
+        '200':
+          description: A list of payment methods for the customer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentMethod'
+        '404':
+          description: Customer not found
+
+  /billing/payment-methods:
+    post:
+      summary: Add a new payment method for a customer
+      tags:
+        - Payments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentMethodRequest'
+      responses:
+        '201':
+          description: Payment method added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethod'
+        '400':
+          description: Invalid payment method details
+        '404':
+          description: Customer not found
+
+components:
+  schemas:
+    Invoice:
+      type: object
+      properties:
+        invoiceId:
+          type: string
+          description: The unique identifier of the invoice
+        customerId:
+          type: string
+          description: The unique identifier of the customer
+        amount:
+          type: number
+          format: float
+          description: The total amount of the invoice
+        currency:
+          type: string
+          description: The currency of the invoice amount (e.g., USD)
+        status:
+          type: string
+          description: The status of the invoice (e.g., Paid, Unpaid, Overdue)
+        issueDate:
+          type: string
+          format: date
+          description: The date the invoice was issued
+        dueDate:
+          type: string
+          format: date
+          description: The date the invoice is due
+
+    PaymentRequest:
+      type: object
+      properties:
+        invoiceId:
+          type: string
+          description: The unique identifier of the invoice being paid
+        paymentMethodId:
+          type: string
+          description: The unique identifier of the payment method used
+        amount:
+          type: number
+          format: float
+          description: The amount being paid
+
+    PaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          description: The unique identifier of the recorded payment
+        invoiceId:
+          type: string
+          description: The unique identifier of the invoice being paid
+        amount:
+          type: number
+          format: float
+          description: The amount that was paid
+        currency:
